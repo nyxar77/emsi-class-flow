@@ -1,12 +1,7 @@
 {
   "compilerOptions": {
     // Environment setup & latest features
-    "lib": [
-      "ESNext",
-      "DOM",
-      "DOM.Iterable",
-      "WebWorker"
-    ],
+    "lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
     "target": "ESNext",
     "module": "Preserve",
     "moduleDetection": "force",
@@ -25,18 +20,10 @@
     "noImplicitOverride": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@/layout/*": [
-        "./src/components/layout/*"
-      ],
-      "@/ui/*": [
-        "./src/components/ui/*"
-      ]
-      "@/types/*": [
-        "./src/types/*"
-      ]
+      "@/*": ["./src/*"],
+      "@/layout/*": ["./src/components/layout/*"],
+      "@/ui/*": ["./src/components/ui/*"],
+      "@/types/*": ["./src/types/*"]
     },
     // Some stricter flags (disabled by default)
     "noUnusedLocals": true,
@@ -48,12 +35,7 @@
     "useDefineForClassFields": true,
     "forceConsistentCasingInFileNames": true,
     "incremental": true,
-    "types": [
-      "bun-types"
-    ]
+    "types": ["bun-types"]
   },
-  "exclude": [
-    "dist",
-    "node_modules"
-  ]
+  "exclude": ["dist", "node_modules", ".direnv"]
 }

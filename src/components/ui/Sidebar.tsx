@@ -75,13 +75,14 @@ export function SidebarLayout({
   darkMode,
   onToggleDark,
 }: SidebarLayoutProps) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(
+    Boolean(localStorage.getItem("sideBar-collaped")) || false,
+  );
   const [mobileOpen, setMobileOpen] = useState(false);
   const nav = navByRole[role] ?? [];
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
-      {/* Logo */}
       <div
         className={`flex items-center gap-3 px-4 py-5 border-b border-[#ccd0da] dark:border-[#313244] ${collapsed ? "justify-center" : ""}`}
       >
@@ -91,7 +92,7 @@ export function SidebarLayout({
         {!collapsed && (
           <div>
             <p className="text-sm font-black text-[#4c4f69] dark:text-[#cdd6f4] leading-none">
-              EMSI
+              Emsi
             </p>
             <p className="text-[10px] text-[#9ca0b0] dark:text-[#6c7086] font-medium tracking-wider uppercase">
               Campus
@@ -100,7 +101,6 @@ export function SidebarLayout({
         )}
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {nav.map((item) => {
           const active = activeSection === item.id;
@@ -138,9 +138,7 @@ export function SidebarLayout({
         })}
       </nav>
 
-      {/* Bottom */}
       <div className="px-3 py-3 border-t border-[#ccd0da] dark:border-[#313244] space-y-2">
-        {/* Dark toggle */}
         <button
           type="button"
           onClick={onToggleDark}
@@ -150,10 +148,12 @@ export function SidebarLayout({
           {!collapsed && <span>{darkMode ? "Mode clair" : "Mode sombre"}</span>}
         </button>
 
-        {/* Collapse */}
         <button
           type="button"
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={() => {
+            setCollapsed(!collapsed);
+            localStorage.setItem("sideBar-collaped", "true");
+          }}
           className={`hidden md:flex w-full items-center gap-3 px-3 py-2 rounded-xl text-sm text-[#5c5f77] dark:text-[#a6adc8] hover:bg-[#ccd0da] dark:hover:bg-[#313244] transition-all ${collapsed ? "justify-center" : ""}`}
         >
           <span className="shrink-0 w-4 h-4">
@@ -162,7 +162,6 @@ export function SidebarLayout({
           {!collapsed && <span>Réduire</span>}
         </button>
 
-        {/* User */}
         <div
           className={`flex items-center gap-3 px-3 py-2 rounded-xl bg-[#ccd0da] dark:bg-[#313244] ${collapsed ? "justify-center" : ""}`}
         >
@@ -190,14 +189,15 @@ export function SidebarLayout({
 
   return (
     <div className="flex h-screen bg-[#eff1f5] dark:bg-[#1e1e2e] overflow-hidden">
-      {/* Desktop Sidebar */}
       <aside
-        className={`hidden md:flex flex-col shrink-0 bg-[#e6e9ef] dark:bg-[#181825] border-r border-[#ccd0da] dark:border-[#313244] transition-all duration-300 ${collapsed ? "w-16" : "w-60"}`}
+        className={`hidden md:flex flex-col shrink-0 bg-[#e6e9ef] dark:bg-[#181825] 
+        border-r border-[#ccd0da] dark:border-[#313244] transition-all duration-300 
+        overflow-hidden  // ← add this
+        ${collapsed ? "w-16" : "w-60"}`}
       >
         <SidebarContent />
       </aside>
 
-      {/* Mobile overlay */}
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-40 flex">
           <div
@@ -210,9 +210,7 @@ export function SidebarLayout({
         </div>
       )}
 
-      {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile topbar */}
         <div className="md:hidden flex items-center justify-between px-4 py-3 bg-[#e6e9ef] dark:bg-[#181825] border-b border-[#ccd0da] dark:border-[#313244]">
           <button
             type="button"
@@ -231,7 +229,6 @@ export function SidebarLayout({
   );
 }
 
-// ── Icons (inline SVG, no deps) ──────────────────────────────────────────────
 function IconGrid() {
   return (
     <svg

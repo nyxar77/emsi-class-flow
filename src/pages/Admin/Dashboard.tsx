@@ -7,7 +7,12 @@ export function Dashboard() {
       <div>
         <h1 className="text-2xl font-black text-[#4c4f69] dark:text-[#cdd6f4]">Tableau de bord</h1>
         <p className="text-sm text-[#9ca0b0] dark:text-[#6c7086] mt-0.5">
-          Vue d'ensemble — EMSI Campus · Mardi 14 Jan 2025
+          Vue d'ensemble — EMSI Campus ·{" "}
+          {new Date().toLocaleDateString("fr-FR", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })}
         </p>
       </div>
 
