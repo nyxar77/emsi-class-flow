@@ -1,0 +1,188 @@
+/* =========================================
+   1. Theme Variables (Light & Dark)
+   ========================================= */
+:root {
+  /* Global */
+  --btn-focus-ring: rgba(0, 0, 0, 0.15);
+  --btn-radius: 10px;
+
+  /* Primary Variant (Light) */
+  --btn-primary-bg: #111111;
+  --btn-primary-hover: #222222;
+  --btn-primary-text: #ffffff;
+  --btn-primary-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 4px 6px -1px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+  --btn-primary-shadow-hover: 0 4px 8px -2px rgba(0, 0, 0, 0.15), 0 6px 12px -2px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  --btn-primary-glare: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 100%);
+
+  /* Secondary Variant (Light) */
+  --btn-secondary-bg: #ffffff;
+  --btn-secondary-hover: #fafafa;
+  --btn-secondary-text: #111111;
+  --btn-secondary-border: #e4e4e7;
+  --btn-secondary-border-hover: #d4d4d8;
+  --btn-secondary-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), inset 0 -2px 0 rgba(0, 0, 0, 0.01);
+
+  /* Danger Variant (Light) */
+  --btn-danger-bg: #e11d48;
+  --btn-danger-hover: #be123c;
+  --btn-danger-text: #ffffff;
+  --btn-danger-shadow: 0 2px 6px rgba(225, 29, 72, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+  --btn-danger-shadow-hover: 0 4px 12px rgba(225, 29, 72, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Global */
+    --btn-focus-ring: rgba(255, 255, 255, 0.25);
+
+    /* Primary Variant (Dark) */
+    --btn-primary-bg: #f4f4f5;
+    --btn-primary-hover: #ffffff;
+    --btn-primary-text: #09090b;
+    --btn-primary-shadow: 0 2px 5px rgba(0, 0, 0, 0.2), inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    --btn-primary-shadow-hover: 0 4px 10px rgba(0, 0, 0, 0.3), inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    --btn-primary-glare: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 100%);
+
+    /* Secondary Variant (Dark) */
+    --btn-secondary-bg: #18181b;
+    --btn-secondary-hover: #27272a;
+    --btn-secondary-text: #ffffff;
+    --btn-secondary-border: #27272a;
+    --btn-secondary-border-hover: #3f3f46;
+    --btn-secondary-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+    /* Danger Variant (Dark) */
+    --btn-danger-bg: #f43f5e;
+    --btn-danger-hover: #e11d48;
+    --btn-danger-shadow: 0 2px 8px rgba(244, 63, 94, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    --btn-danger-shadow-hover: 0 4px 12px rgba(244, 63, 94, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* =========================================
+   2. Base Architecture
+   ========================================= */
+.premium-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--btn-radius);
+  font-family: inherit;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  overflow: hidden;
+  outline: none;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.premium-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.premium-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.premium-btn:focus-visible {
+  box-shadow: 0 0 0 3px var(--btn-focus-ring), var(--btn-current-shadow, 0 0 0 transparent);
+}
+
+/* Internal Structure */
+.premium-btn__content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.premium-btn__glare {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* =========================================
+   3. Sizing
+   ========================================= */
+.premium-btn--medium {
+  height: 44px;
+  padding: 0 20px;
+  font-size: 14px;
+}
+
+.premium-btn--large {
+  height: 52px;
+  padding: 0 28px;
+  font-size: 16px;
+}
+
+/* =========================================
+   4. Variants
+   ========================================= */
+
+/* Primary */
+.premium-btn--primary {
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  box-shadow: var(--btn-primary-shadow);
+  --btn-current-shadow: var(--btn-primary-shadow);
+}
+
+.premium-btn--primary .premium-btn__glare {
+  background: var(--btn-primary-glare);
+}
+
+.premium-btn--primary:hover:not(:disabled) {
+  background-color: var(--btn-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--btn-primary-shadow-hover);
+  --btn-current-shadow: var(--btn-primary-shadow-hover);
+}
+
+/* Secondary */
+.premium-btn--secondary {
+  background-color: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  box-shadow: inset 0 0 0 1px var(--btn-secondary-border), var(--btn-secondary-shadow);
+  --btn-current-shadow: var(--btn-secondary-shadow);
+}
+
+.premium-btn--secondary .premium-btn__glare {
+  display: none;
+  /* Flat look for secondary */
+}
+
+.premium-btn--secondary:hover:not(:disabled) {
+  background-color: var(--btn-secondary-hover);
+  box-shadow: inset 0 0 0 1px var(--btn-secondary-border-hover), var(--btn-secondary-shadow);
+}
+
+/* Danger */
+.premium-btn--danger {
+  background-color: var(--btn-danger-bg);
+  color: var(--btn-danger-text);
+  box-shadow: var(--btn-danger-shadow);
+  --btn-current-shadow: var(--btn-danger-shadow);
+}
+
+.premium-btn--danger .premium-btn__glare {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.premium-btn--danger:hover:not(:disabled) {
+  background-color: var(--btn-danger-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--btn-danger-shadow-hover);
+  --btn-current-shadow: var(--btn-danger-shadow-hover);
+}
