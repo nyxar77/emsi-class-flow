@@ -1,4 +1,4 @@
-import { InputHTMLAttributes, ReactNode, forwardRef } from "react";
+import { forwardRef, type InputHTMLAttributes, type ReactNode } from "react";
 
 type InputSize = "sm" | "md" | "lg";
 type InputState = "default" | "error" | "success";

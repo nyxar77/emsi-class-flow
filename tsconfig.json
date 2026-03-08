@@ -34,6 +34,9 @@
       "@/ui/*": [
         "./src/components/ui/*"
       ]
+      "@/types/*": [
+        "./src/types/*"
+      ]
     },
     // Some stricter flags (disabled by default)
     "noUnusedLocals": true,

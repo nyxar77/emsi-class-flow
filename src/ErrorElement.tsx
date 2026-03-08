@@ -4,7 +4,7 @@ import Navbar from "./components/ui/Navbar";
 interface ErrorElementProps {
   title?: string;
   message?: string;
-  error?: Error | null; // Pass an error object to show the technical details
+  error?: Error | null;
   onRetry?: () => void;
   onGoHome?: () => void;
 }

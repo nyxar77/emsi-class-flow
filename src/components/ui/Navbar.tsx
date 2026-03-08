@@ -1,10 +1,10 @@
 import { useState } from "react";
+import emsiLogo from "@/assets/Emsi-logo-colorless.svg";
 import { ALink } from "@/layout/ALink";
 import { Button } from "@/layout/Button";
 import { Input } from "@/layout/Input";
 import { Navlink } from "@/layout/Navlink";
 
-// Basic SVG icons to keep it dependency-free
 const SearchIcon = (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -67,19 +67,18 @@ export function Navbar() {
           <div className="flex shrink-0 items-center">
             <ALink
               to="/"
-              variant="primary"
-              underline="none"
-              className="text-xl font-bold tracking-tight"
+              variant="base"
+              className="flex items-center justify-center p-1 transition-transform hover:scale-105"
             >
-              NyxUI
+              <img
+                src={emsiLogo}
+                alt="EMSI Logo"
+                className="h-10 w-auto object-contain brightness-110 contrast-125 dark:invert dark:sepia-[.20] dark:hue-rotate-[200deg] dark:brightness-200"
+              />
             </ALink>
           </div>
 
           <div className="hidden md:flex md:items-center md:gap-6">
-            {/* <ALink to="/components" variant="muted">
-              Components
-            </ALink> */}
-
             <Navlink to="/">Components</Navlink>
             <Navlink to="/docs">Documentation</Navlink>
             <Navlink to="/blog">Blog</Navlink>

@@ -1,0 +1,638 @@
+import { useState } from "react";
+import { Badge, Card, SectionHeader, StatCard } from "@/layout/Shared";
+
+// ── ADMIN DASHBOARD ──────────────────────────────────────────────────────────
+export function AdminDashboard() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-black text-[#4c4f69] dark:text-[#cdd6f4]">Tableau de bord</h1>
+        <p className="text-sm text-[#9ca0b0] dark:text-[#6c7086] mt-0.5">
+          Vue d'ensemble — EMSI Campus · Mardi 14 Jan 2025
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard label="Réservations en attente" value="3" icon={<IcDoor />} variant="yellow" />
+        <StatCard label="Documents à traiter" value="2" icon={<IcDoc />} variant="green" />
+        <StatCard label="Incidents ouverts" value="5" icon={<IcAlert />} variant="red" />
+        <StatCard
+          label="Salles occupées"
+          value="12"
+          icon={<IcGrid />}
+          variant="mauve"
+          trend="sur 18 disponibles"
+        />
+      </div>
+
+      {/* Recent activity */}
+      <div className="grid lg:grid-cols-2 gap-4">
+        <Card>
+          <SectionHeader title="Dernières demandes" subtitle="Réservations & documents récents" />
+          <div className="space-y-2">
+            {[
+              {
+                who: "Yassine B.",
+                action: "Réservation Salle C-302",
+                time: "il y a 5 min",
+                type: "pending" as const,
+              },
+              {
+                who: "Club IA",
+                action: "Réservation Amphi 1",
+                time: "il y a 18 min",
+                type: "pending" as const,
+              },
+              {
+                who: "Sara L.",
+                action: "Attestation de scolarité",
+                time: "il y a 1h",
+                type: "doc" as const,
+              },
+              {
+                who: "Dr. Alami",
+                action: "Réservation Salle B-204",
+                time: "il y a 2h",
+                type: "approved" as const,
+              },
+            ].map((a, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-[#eff1f5] dark:bg-[#1e1e2e] border border-[#ccd0da] dark:border-[#313244]"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-[#8839ef] dark:bg-[#cba6f7] flex items-center justify-center shrink-0">
+                    <span className="text-white dark:text-[#11111b] text-xs font-bold">
+                      {a.who.charAt(0)}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-[#4c4f69] dark:text-[#cdd6f4]">
+                      {a.who}
+                    </p>
+                    <p className="text-xs text-[#9ca0b0] dark:text-[#6c7086]">{a.action}</p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <Badge
+                    variant={a.type === "pending" ? "yellow" : a.type === "doc" ? "blue" : "green"}
+                  >
+                    {a.type === "pending" ? "En attente" : a.type === "doc" ? "Document" : "Validé"}
+                  </Badge>
+                  <p className="text-[10px] text-[#9ca0b0] dark:text-[#6c7086] mt-0.5">{a.time}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card>
+          <SectionHeader title="Incidents ouverts" />
+          <div className="space-y-2">
+            {[
+              {
+                id: "#INC-048",
+                room: "B-204",
+                type: "Projecteur HS",
+                by: "Dr. Alami",
+                status: "open" as const,
+              },
+              {
+                id: "#INC-047",
+                room: "Amphi 2",
+                type: "Climatisation",
+                by: "Étudiant",
+                status: "in_progress" as const,
+              },
+              {
+                id: "#INC-046",
+                room: "TP-3",
+                type: "Réseau WiFi",
+                by: "Dr. Bennani",
+                status: "in_progress" as const,
+              },
+              {
+                id: "#INC-045",
+                room: "A-101",
+                type: "Tableau interactif",
+                by: "Dr. Alami",
+                status: "open" as const,
+              },
+            ].map((inc) => (
+              <div
+                key={inc.id}
+                className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-[#eff1f5] dark:bg-[#1e1e2e] border border-[#ccd0da] dark:border-[#313244]"
+              >
+                <div>
+                  <p className="text-sm font-semibold text-[#4c4f69] dark:text-[#cdd6f4]">
+                    {inc.type}
+                  </p>
+                  <p className="text-xs text-[#9ca0b0] dark:text-[#6c7086]">
+                    {inc.room} · {inc.by}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Badge variant={inc.status === "open" ? "red" : "yellow"}>
+                    {inc.status === "open" ? "Ouvert" : "En cours"}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// ── ADMIN RESERVATIONS ───────────────────────────────────────────────────────
+export function AdminReservations() {
+  const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+
+  const all = [
+    {
+      id: "#RES-021",
+      who: "Yassine B.",
+      role: "Étudiant",
+      room: "C-302",
+      purpose: "Révision groupe BD",
+      date: "16 Jan",
+      time: "16:00–18:00",
+      status: "pending" as const,
+    },
+    {
+      id: "#RES-020",
+      who: "Club IA EMSI",
+      role: "Club",
+      room: "Amphi 1",
+      purpose: "Workshop Intelligence Artificielle",
+      date: "20 Jan",
+      time: "09:00–17:00",
+      status: "pending" as const,
+    },
+    {
+      id: "#RES-019",
+      who: "Sara L.",
+      role: "Étudiant",
+      room: "A-105",
+      purpose: "Projet Angular",
+      date: "15 Jan",
+      time: "10:00–12:00",
+      status: "pending" as const,
+    },
+    {
+      id: "#RES-018",
+      who: "Dr. Alami",
+      role: "Professeur",
+      room: "B-204",
+      purpose: "Rattrapage Algo Avancée",
+      date: "18 Jan",
+      time: "09:00–11:00",
+      status: "approved" as const,
+    },
+    {
+      id: "#RES-017",
+      who: "Dr. Bennani",
+      role: "Professeur",
+      room: "TP-3",
+      purpose: "Cours supplémentaire BD",
+      date: "17 Jan",
+      time: "14:00–16:00",
+      status: "approved" as const,
+    },
+    {
+      id: "#RES-016",
+      who: "Club Robotics",
+      role: "Club",
+      room: "Amphi 2",
+      purpose: "Conférence Robotique",
+      date: "12 Jan",
+      time: "14:00–18:00",
+      status: "rejected" as const,
+    },
+  ];
+
+  const [statuses, setStatuses] = useState<Record<string, "pending" | "approved" | "rejected">>({});
+
+  const filtered = all.filter((r) => filter === "all" || (statuses[r.id] ?? r.status) === filter);
+
+  function updateStatus(id: string, s: "approved" | "rejected") {
+    setStatuses((prev) => ({ ...prev, [id]: s }));
+  }
+
+  return (
+    <div className="space-y-6">
+      <SectionHeader
+        title="Gestion des réservations"
+        subtitle="Validez ou refusez les demandes de réservation."
+      />
+
+      {/* Filter tabs */}
+      <div className="flex gap-2 flex-wrap">
+        {(["all", "pending", "approved", "rejected"] as const).map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all border ${
+              filter === f
+                ? "bg-[#8839ef] dark:bg-[#cba6f7] text-white dark:text-[#11111b] border-transparent shadow-[0_2px_10px_rgba(136,57,239,0.25)]"
+                : "border-[#ccd0da] dark:border-[#313244] text-[#5c5f77] dark:text-[#a6adc8] hover:bg-[#ccd0da] dark:hover:bg-[#313244]"
+            }`}
+          >
+            {f === "all"
+              ? "Toutes"
+              : f === "pending"
+                ? "En attente"
+                : f === "approved"
+                  ? "Validées"
+                  : "Refusées"}
+          </button>
+        ))}
+      </div>
+
+      <div className="space-y-3">
+        {filtered.map((r) => {
+          const s = statuses[r.id] ?? r.status;
+          return (
+            <Card key={r.id}>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-mono text-[#9ca0b0] dark:text-[#6c7086]">
+                      {r.id}
+                    </span>
+                    <Badge
+                      variant={
+                        r.role === "Professeur" ? "mauve" : r.role === "Club" ? "peach" : "blue"
+                      }
+                    >
+                      {r.role}
+                    </Badge>
+                    <Badge
+                      variant={s === "approved" ? "green" : s === "pending" ? "yellow" : "red"}
+                    >
+                      {s === "approved" ? "Validée" : s === "pending" ? "En attente" : "Refusée"}
+                    </Badge>
+                  </div>
+                  <p className="text-sm font-bold text-[#4c4f69] dark:text-[#cdd6f4]">{r.who}</p>
+                  <p className="text-sm text-[#5c5f77] dark:text-[#a6adc8]">{r.purpose}</p>
+                  <p className="text-xs text-[#9ca0b0] dark:text-[#6c7086] mt-1">
+                    <span className="font-semibold text-[#4c4f69] dark:text-[#cdd6f4]">
+                      {r.room}
+                    </span>
+                    {" · "}
+                    {r.date} · {r.time}
+                  </p>
+                </div>
+                {s === "pending" && (
+                  <div className="flex gap-2 shrink-0">
+                    <button
+                      onClick={() => updateStatus(r.id, "rejected")}
+                      className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#d20f391a] text-[#d20f39] dark:bg-[#f38ba81a] dark:text-[#f38ba8] border border-[#d20f3933] dark:border-[#f38ba833] hover:bg-[#d20f3922] dark:hover:bg-[#f38ba822] transition-colors"
+                    >
+                      Refuser
+                    </button>
+                    <button
+                      onClick={() => updateStatus(r.id, "approved")}
+                      className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#40a02b] dark:bg-[#a6e3a1] text-white dark:text-[#11111b] hover:brightness-90 transition-all"
+                    >
+                      Valider
+                    </button>
+                  </div>
+                )}
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── ADMIN EXAM MANAGEMENT ─────────────────────────────────────────────────────
+export function AdminExams() {
+  const exams = [
+    {
+      subject: "Algorithmique Avancée",
+      date: "15 Jan 2025",
+      time: "09:00–11:00",
+      rooms: ["B-204", "B-205"],
+      students: 58,
+    },
+    {
+      subject: "Base de Données",
+      date: "17 Jan 2025",
+      time: "14:00–16:00",
+      rooms: ["Amphi 1"],
+      students: 120,
+    },
+    {
+      subject: "Réseaux & Protocoles",
+      date: "20 Jan 2025",
+      time: "09:00–11:00",
+      rooms: ["A-101", "A-102"],
+      students: 72,
+    },
+    {
+      subject: "Mathématiques Disc.",
+      date: "22 Jan 2025",
+      time: "14:00–16:00",
+      rooms: ["Amphi 2"],
+      students: 95,
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <SectionHeader
+        title="Affectations examens"
+        subtitle="Gérez et publiez les affectations des salles d'examen."
+        action={
+          <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-[#40a02b] dark:bg-[#a6e3a1] text-white dark:text-[#11111b] hover:brightness-90 transition-all shadow-[0_2px_12px_rgba(64,160,43,0.25)] active:scale-[0.98]">
+            <IcPlus />
+            Nouveau examen
+          </button>
+        }
+      />
+
+      <div className="space-y-4">
+        {exams.map((ex, i) => (
+          <Card key={i}>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex-1">
+                <h3 className="text-base font-bold text-[#4c4f69] dark:text-[#cdd6f4] mb-2">
+                  {ex.subject}
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  <span className="flex items-center gap-1.5 text-xs text-[#9ca0b0] dark:text-[#6c7086]">
+                    <IcCalSm /> {ex.date}
+                  </span>
+                  <span className="flex items-center gap-1.5 text-xs text-[#9ca0b0] dark:text-[#6c7086]">
+                    <IcClockSm /> {ex.time}
+                  </span>
+                  <span className="flex items-center gap-1.5 text-xs text-[#9ca0b0] dark:text-[#6c7086]">
+                    <IcUsersSm /> {ex.students} étudiants
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {ex.rooms.map((r) => (
+                    <Badge key={r} variant="blue">
+                      {r}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <button className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-[#ccd0da] dark:border-[#313244] text-[#5c5f77] dark:text-[#a6adc8] hover:bg-[#ccd0da] dark:hover:bg-[#313244] transition-colors">
+                  Modifier
+                </button>
+                <button className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#1e66f5] dark:bg-[#89b4fa] text-white dark:text-[#11111b] hover:brightness-90 transition-all">
+                  Publier
+                </button>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── ADMIN DOCUMENT REQUESTS ───────────────────────────────────────────────────
+export function AdminDocuments() {
+  const [items, setItems] = useState([
+    {
+      id: "#DOC-022",
+      student: "Yassine B.",
+      type: "Attestation de scolarité",
+      date: "13 Jan",
+      status: "pending" as const,
+    },
+    {
+      id: "#DOC-021",
+      student: "Sara L.",
+      type: "Relevé de notes S5",
+      date: "13 Jan",
+      status: "pending" as const,
+    },
+    {
+      id: "#DOC-020",
+      student: "Omar T.",
+      type: "Certificat d'inscription",
+      date: "10 Jan",
+      status: "ready" as const,
+    },
+    {
+      id: "#DOC-019",
+      student: "Amine K.",
+      type: "Attestation de réussite",
+      date: "9 Jan",
+      status: "delivered" as const,
+    },
+  ]);
+
+  function updateDoc(id: string, s: "ready" | "delivered") {
+    setItems((prev) => prev.map((d) => (d.id === id ? { ...d, status: s } : d)));
+  }
+
+  return (
+    <div className="space-y-6">
+      <SectionHeader title="Demandes de documents" subtitle="Traitez les demandes en attente." />
+
+      <div className="space-y-3">
+        {items.map((d) => (
+          <Card key={d.id}>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-mono text-[#9ca0b0] dark:text-[#6c7086]">
+                    {d.id}
+                  </span>
+                  <Badge
+                    variant={
+                      d.status === "pending" ? "yellow" : d.status === "ready" ? "green" : "teal"
+                    }
+                  >
+                    {d.status === "pending"
+                      ? "En attente"
+                      : d.status === "ready"
+                        ? "Prêt"
+                        : "Remis"}
+                  </Badge>
+                </div>
+                <p className="text-sm font-bold text-[#4c4f69] dark:text-[#cdd6f4]">{d.student}</p>
+                <p className="text-sm text-[#5c5f77] dark:text-[#a6adc8]">{d.type}</p>
+                <p className="text-xs text-[#9ca0b0] dark:text-[#6c7086] mt-0.5">{d.date}</p>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                {d.status === "pending" && (
+                  <button
+                    onClick={() => updateDoc(d.id, "ready")}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#40a02b] dark:bg-[#a6e3a1] text-white dark:text-[#11111b] hover:brightness-90 transition-all"
+                  >
+                    Marquer prêt
+                  </button>
+                )}
+                {d.status === "ready" && (
+                  <button
+                    onClick={() => updateDoc(d.id, "delivered")}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#1e66f5] dark:bg-[#89b4fa] text-white dark:text-[#11111b] hover:brightness-90 transition-all"
+                  >
+                    Remis
+                  </button>
+                )}
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── ADMIN INCIDENTS ───────────────────────────────────────────────────────────
+export function AdminIncidents() {
+  const [items, setItems] = useState([
+    {
+      id: "#INC-048",
+      room: "B-204",
+      type: "Projecteur HS",
+      by: "Dr. Alami",
+      desc: "Le projecteur ne s'allume plus depuis ce matin.",
+      status: "open" as const,
+      date: "14 Jan",
+    },
+    {
+      id: "#INC-047",
+      room: "Amphi 2",
+      type: "Climatisation",
+      by: "Étudiant",
+      desc: "La climatisation ne fonctionne pas, il fait très chaud.",
+      status: "in_progress" as const,
+      date: "13 Jan",
+    },
+    {
+      id: "#INC-046",
+      room: "TP-3",
+      type: "Réseau WiFi",
+      by: "Dr. Bennani",
+      desc: "Pas de connexion WiFi dans toute la salle TP-3.",
+      status: "in_progress" as const,
+      date: "13 Jan",
+    },
+    {
+      id: "#INC-045",
+      room: "A-101",
+      type: "Tableau interactif",
+      by: "Dr. Alami",
+      desc: "Le tableau interactif ne répond plus aux commandes.",
+      status: "open" as const,
+      date: "12 Jan",
+    },
+    {
+      id: "#INC-044",
+      room: "B-201",
+      type: "Éclairage",
+      by: "Étudiant",
+      desc: "La moitié des lumières sont grillées.",
+      status: "resolved" as const,
+      date: "10 Jan",
+    },
+  ]);
+
+  function updateInc(id: string, s: "in_progress" | "resolved") {
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status: s } : i)));
+  }
+
+  return (
+    <div className="space-y-6">
+      <SectionHeader
+        title="Incidents techniques"
+        subtitle="Suivez et gérez tous les incidents signalés."
+      />
+
+      <div className="flex gap-3 flex-wrap text-xs font-semibold text-[#9ca0b0] dark:text-[#6c7086]">
+        {[
+          {
+            label: "Ouverts",
+            count: items.filter((i) => i.status === "open").length,
+            color: "text-[#d20f39] dark:text-[#f38ba8]",
+          },
+          {
+            label: "En cours",
+            count: items.filter((i) => i.status === "in_progress").length,
+            color: "text-[#df8e1d] dark:text-[#f9e2af]",
+          },
+          {
+            label: "Résolus",
+            count: items.filter((i) => i.status === "resolved").length,
+            color: "text-[#40a02b] dark:text-[#a6e3a1]",
+          },
+        ].map((s) => (
+          <span
+            key={s.label}
+            className="px-3 py-1.5 rounded-xl bg-[#e6e9ef] dark:bg-[#181825] border border-[#ccd0da] dark:border-[#313244]"
+          >
+            <span className={s.color}>{s.count}</span> {s.label}
+          </span>
+        ))}
+      </div>
+
+      <div className="space-y-3">
+        {items.map((inc) => (
+          <Card key={inc.id}>
+            <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-mono text-[#9ca0b0] dark:text-[#6c7086]">
+                    {inc.id}
+                  </span>
+                  <Badge
+                    variant={
+                      inc.status === "open"
+                        ? "red"
+                        : inc.status === "in_progress"
+                          ? "yellow"
+                          : "green"
+                    }
+                  >
+                    {inc.status === "open"
+                      ? "Ouvert"
+                      : inc.status === "in_progress"
+                        ? "En cours"
+                        : "Résolu"}
+                  </Badge>
+                </div>
+                <p className="text-sm font-bold text-[#4c4f69] dark:text-[#cdd6f4]">{inc.type}</p>
+                <p className="text-xs text-[#9ca0b0] dark:text-[#6c7086] mb-1">
+                  {inc.room} · Signalé par {inc.by} · {inc.date}
+                </p>
+                <p className="text-sm text-[#5c5f77] dark:text-[#a6adc8]">{inc.desc}</p>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                {inc.status === "open" && (
+                  <button
+                    onClick={() => updateInc(inc.id, "in_progress")}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#df8e1d1a] text-[#df8e1d] dark:bg-[#f9e2af1a] dark:text-[#f9e2af] border border-[#df8e1d33] dark:border-[#f9e2af33] hover:bg-[#df8e1d22] dark:hover:bg-[#f9e2af22] transition-colors"
+                  >
+                    Assigner
+                  </button>
+                )}
+                {inc.status === "in_progress" && (
+                  <button
+                    onClick={() => updateInc(inc.id, "resolved")}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#40a02b] dark:bg-[#a6e3a1] text-white dark:text-[#11111b] hover:brightness-90 transition-all"
+                  >
+                    Résolu
+                  </button>
+                )}
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Icons
