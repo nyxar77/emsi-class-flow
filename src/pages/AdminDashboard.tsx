@@ -6,16 +6,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   getPendingReservations, approveReservation, rejectReservation,
-  createExam, getRooms, approveDocument, rejectDocument,
+  createExam, getRooms, approveDocument, rejectDocument, getPendingDocuments,
 } from "@/lib/api";
 import { toast } from "sonner";
-import { ShieldCheck, CalendarCheck, PlusCircle, FileCheck, Loader2, Check, XCircle } from "lucide-react";
+import { CalendarCheck, PlusCircle, FileCheck, Loader2, Check, XCircle } from "lucide-react";
 
 const AdminDashboard = () => {
   const [pendingRes, setPendingRes] = useState<any[]>([]);
+  const [pendingDocs, setPendingDocs] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [docActionLoading, setDocActionLoading] = useState<number | null>(null);
 
   // Exam form
   const [examForm, setExamForm] = useState({
@@ -23,14 +25,10 @@ const AdminDashboard = () => {
   });
   const [examSubmitting, setExamSubmitting] = useState(false);
 
-  // Document management
-  const [docId, setDocId] = useState("");
-  const [docActionLoading, setDocActionLoading] = useState(false);
-
   useEffect(() => {
     setLoading(true);
-    Promise.all([getPendingReservations(), getRooms()])
-      .then(([res, r]) => { setPendingRes(res); setRooms(r); })
+    Promise.all([getPendingReservations(), getRooms(), getPendingDocuments().catch(() => [])])
+      .then(([res, r, docs]) => { setPendingRes(res); setRooms(r); setPendingDocs(docs); })
       .catch(() => toast.error("Failed to load data"))
       .finally(() => setLoading(false));
   }, []);
@@ -45,6 +43,19 @@ const AdminDashboard = () => {
       toast.error(`Failed to ${action} reservation`);
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const handleDocAction = async (id: number, action: "approve" | "reject") => {
+    setDocActionLoading(id);
+    try {
+      action === "approve" ? await approveDocument(id) : await rejectDocument(id);
+      toast.success(`Document ${action}d`);
+      setPendingDocs((prev) => prev.filter((d) => d.id !== id));
+    } catch {
+      toast.error(`Failed to ${action} document`);
+    } finally {
+      setDocActionLoading(null);
     }
   };
 
@@ -66,21 +77,6 @@ const AdminDashboard = () => {
       toast.error("Failed to create exam");
     } finally {
       setExamSubmitting(false);
-    }
-  };
-
-  const handleDocAction = async (action: "approve" | "reject") => {
-    const id = parseInt(docId);
-    if (isNaN(id)) { toast.error("Enter a valid document ID"); return; }
-    setDocActionLoading(true);
-    try {
-      action === "approve" ? await approveDocument(id) : await rejectDocument(id);
-      toast.success(`Document ${action}d`);
-      setDocId("");
-    } catch {
-      toast.error(`Failed to ${action} document`);
-    } finally {
-      setDocActionLoading(false);
     }
   };
 
@@ -150,15 +146,74 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
+        {/* Pending Document Requests */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileCheck className="h-5 w-5 text-primary" /> Pending Document Requests
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+            ) : pendingDocs.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center py-4">No pending document requests.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="text-left p-2 font-medium">ID</th>
+                      <th className="text-left p-2 font-medium">Student ID</th>
+                      <th className="text-left p-2 font-medium">Document Type</th>
+                      <th className="text-left p-2 font-medium">Date</th>
+                      <th className="text-left p-2 font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pendingDocs.map((d: any) => (
+                      <tr key={d.id} className="border-b">
+                        <td className="p-2">{d.id}</td>
+                        <td className="p-2">{d.student_id}</td>
+                        <td className="p-2">{d.document_type}</td>
+                        <td className="p-2">{d.created_at?.split("T")[0]}</td>
+                        <td className="p-2">
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              onClick={() => handleDocAction(d.id, "approve")}
+                              disabled={docActionLoading === d.id}
+                            >
+                              <Check className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDocAction(d.id, "reject")}
+                              disabled={docActionLoading === d.id}
+                            >
+                              <XCircle className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Create Exam Seating */}
-        <Card>
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PlusCircle className="h-5 w-5 text-primary" /> Create Exam Seating
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleExam} className="space-y-3">
+            <form onSubmit={handleExam} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <div className="space-y-1">
                 <Label>Subject</Label>
                 <Input value={examForm.subject} onChange={(e) => setExamForm({ ...examForm, subject: e.target.value })} required placeholder="e.g. Mathematics" />
@@ -177,61 +232,29 @@ const AdminDashboard = () => {
                   ))}
                 </select>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <Label>Date</Label>
-                  <Input type="date" value={examForm.date} onChange={(e) => setExamForm({ ...examForm, date: e.target.value })} required />
-                </div>
-                <div className="space-y-1">
-                  <Label>Time</Label>
-                  <Input type="time" value={examForm.time} onChange={(e) => setExamForm({ ...examForm, time: e.target.value })} required />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <Label>Student ID</Label>
-                  <Input type="number" value={examForm.student_id} onChange={(e) => setExamForm({ ...examForm, student_id: e.target.value })} required />
-                </div>
-                <div className="space-y-1">
-                  <Label>Table Number</Label>
-                  <Input type="number" value={examForm.table_number} onChange={(e) => setExamForm({ ...examForm, table_number: e.target.value })} required />
-                </div>
-              </div>
-              <Button type="submit" disabled={examSubmitting} className="w-full">
-                {examSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-                Create Exam Seating
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Document Management */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileCheck className="h-5 w-5 text-primary" /> Document Requests
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
               <div className="space-y-1">
-                <Label>Document ID</Label>
-                <Input
-                  type="number"
-                  value={docId}
-                  onChange={(e) => setDocId(e.target.value)}
-                  placeholder="Enter document request ID"
-                />
+                <Label>Date</Label>
+                <Input type="date" value={examForm.date} onChange={(e) => setExamForm({ ...examForm, date: e.target.value })} required />
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Button onClick={() => handleDocAction("approve")} disabled={docActionLoading || !docId}>
-                  <Check className="h-4 w-4 mr-1" /> Approve
-                </Button>
-                <Button variant="destructive" onClick={() => handleDocAction("reject")} disabled={docActionLoading || !docId}>
-                  <XCircle className="h-4 w-4 mr-1" /> Reject
+              <div className="space-y-1">
+                <Label>Time</Label>
+                <Input type="time" value={examForm.time} onChange={(e) => setExamForm({ ...examForm, time: e.target.value })} required />
+              </div>
+              <div className="space-y-1">
+                <Label>Student ID</Label>
+                <Input type="number" value={examForm.student_id} onChange={(e) => setExamForm({ ...examForm, student_id: e.target.value })} required />
+              </div>
+              <div className="space-y-1">
+                <Label>Table Number</Label>
+                <Input type="number" value={examForm.table_number} onChange={(e) => setExamForm({ ...examForm, table_number: e.target.value })} required />
+              </div>
+              <div className="sm:col-span-2 lg:col-span-3">
+                <Button type="submit" disabled={examSubmitting} className="w-full">
+                  {examSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+                  Create Exam Seating
                 </Button>
               </div>
-            </div>
+            </form>
           </CardContent>
         </Card>
       </div>
