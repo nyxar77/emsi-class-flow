@@ -5,16 +5,33 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getRooms, createReservation, getReservations } from "@/lib/api";
+import { getRooms, createReservation, getReservations, sendChatMessage } from "@/lib/api";
 import { toast } from "sonner";
 import { DoorOpen, CalendarPlus, Clock, Loader2, MessageCircle, Send, X } from "lucide-react";
-import { sendChatMessage } from "@/lib/api";
+
+const STATUS_FILTERS = [
+  { label: "All", value: "" },
+  { label: "Pending", value: "pending" },
+  { label: "Approved", value: "approved" },
+  { label: "Rejected", value: "rejected" },
+];
+
+const statusBadge = (status: string) => {
+  const colors: Record<string, string> = {
+    pending: "bg-yellow-100 text-yellow-800",
+    approved: "bg-green-100 text-green-800",
+    rejected: "bg-red-100 text-red-800",
+  };
+  return colors[status] || "bg-muted text-muted-foreground";
+};
 
 const ProfessorDashboard = () => {
   const { user } = useAuth();
   const [rooms, setRooms] = useState<any[]>([]);
   const [reservations, setReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [resLoading, setResLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("");
 
   // Reservation form
   const [roomId, setRoomId] = useState("");
@@ -30,14 +47,33 @@ const ProfessorDashboard = () => {
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
 
+  const loadReservations = async (filter?: string) => {
+    if (!user) return;
+    setResLoading(true);
+    try {
+      const status = filter !== undefined ? filter : statusFilter;
+      const res = await getReservations(user.userId, status || undefined);
+      setReservations(res);
+    } catch {
+      toast.error("Failed to load reservations");
+    } finally {
+      setResLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
     setLoading(true);
-    Promise.all([getRooms(), getReservations(user.userId, "pending")])
+    Promise.all([getRooms(), getReservations(user.userId)])
       .then(([r, res]) => { setRooms(r); setReservations(res); })
       .catch(() => toast.error("Failed to load data"))
       .finally(() => setLoading(false));
   }, [user]);
+
+  const handleFilterChange = (value: string) => {
+    setStatusFilter(value);
+    loadReservations(value);
+  };
 
   const handleReserve = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,8 +90,7 @@ const ProfessorDashboard = () => {
       });
       toast.success("Reservation submitted!");
       setRoomId(""); setDate(""); setStartTime(""); setEndTime(""); setPurpose("");
-      const res = await getReservations(user.userId, "pending");
-      setReservations(res);
+      loadReservations();
     } catch {
       toast.error("Failed to create reservation");
     } finally {
@@ -65,13 +100,13 @@ const ProfessorDashboard = () => {
 
   const handleChat = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!chatInput.trim()) return;
+    if (!chatInput.trim() || !user) return;
     const msg = chatInput;
     setChatMessages((prev) => [...prev, { role: "user", text: msg }]);
     setChatInput("");
     setChatLoading(true);
     try {
-      const reply = await sendChatMessage(msg);
+      const reply = await sendChatMessage(String(user.userId), msg);
       setChatMessages((prev) => [...prev, { role: "bot", text: reply }]);
     } catch {
       setChatMessages((prev) => [...prev, { role: "bot", text: "Sorry, something went wrong." }]);
@@ -127,8 +162,18 @@ const ProfessorDashboard = () => {
           <CardContent>
             <form onSubmit={handleReserve} className="space-y-3">
               <div className="space-y-1">
-                <Label>Room ID</Label>
-                <Input value={roomId} onChange={(e) => setRoomId(e.target.value)} required type="number" placeholder="Select from rooms" />
+                <Label>Room</Label>
+                <select
+                  value={roomId}
+                  onChange={(e) => setRoomId(e.target.value)}
+                  required
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="">Select room</option>
+                  {rooms.map((room: any) => (
+                    <option key={room.id} value={room.id}>{room.name || `Room ${room.id}`}</option>
+                  ))}
+                </select>
               </div>
               <div className="space-y-1">
                 <Label>Date</Label>
@@ -159,15 +204,29 @@ const ProfessorDashboard = () => {
         {/* My Reservations */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-primary" /> My Pending Reservations
-            </CardTitle>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary" /> My Reservations
+              </CardTitle>
+              <div className="flex gap-1">
+                {STATUS_FILTERS.map((f) => (
+                  <Button
+                    key={f.value}
+                    variant={statusFilter === f.value ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleFilterChange(f.value)}
+                  >
+                    {f.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            {loading ? (
+            {loading || resLoading ? (
               <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
             ) : reservations.length === 0 ? (
-              <p className="text-muted-foreground text-sm text-center py-4">No pending reservations.</p>
+              <p className="text-muted-foreground text-sm text-center py-4">No reservations found.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -188,7 +247,7 @@ const ProfessorDashboard = () => {
                         <td className="p-2">{r.start_time} - {r.end_time}</td>
                         <td className="p-2">{r.purpose}</td>
                         <td className="p-2">
-                          <span className="inline-block rounded-full bg-accent/20 text-accent-foreground px-2 py-0.5 text-xs font-medium">
+                          <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${statusBadge(r.status)}`}>
                             {r.status || "pending"}
                           </span>
                         </td>

@@ -20,8 +20,8 @@ export const createReservation = (data: {
   room_id: number; user_id: number; date: string; start_time: string; end_time: string; purpose: string;
 }) => request<any>("/reservations", { method: "POST", body: JSON.stringify(data) });
 
-export const getReservations = (userId: number, status: string) =>
-  request<any[]>(`/reservations?user_id=${userId}&status=${status}`);
+export const getReservations = (userId: number, status?: string) =>
+  request<any[]>(`/reservations?user_id=${userId}${status ? `&status=${status}` : ""}`);
 
 // Admin reservations
 export const getPendingReservations = () => request<any[]>("/admin/reservations/pending");
@@ -39,17 +39,20 @@ export const createExam = (data: {
 // Documents
 export const createDocument = (data: { student_id: number; document_type: string }) =>
   request<any>("/documents", { method: "POST", body: JSON.stringify(data) });
+export const getStudentDocuments = (studentId: number) =>
+  request<any[]>(`/documents?student_id=${studentId}`);
+export const getPendingDocuments = () => request<any[]>("/documents/pending");
 export const approveDocument = (id: number) =>
   request<any>(`/documents/${id}/approve`, { method: "PUT" });
 export const rejectDocument = (id: number) =>
   request<any>(`/documents/${id}/reject`, { method: "PUT" });
 
 // Chatbot
-export const sendChatMessage = async (message: string) => {
+export const sendChatMessage = async (sessionId: string, message: string) => {
   const res = await fetch("https://othy123.app.n8n.cloud/webhook-test/it-support-chatbot", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({ sessionId, message }),
   });
   return res.text();
 };
