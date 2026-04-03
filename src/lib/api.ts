@@ -89,7 +89,7 @@ export const rejectDocument = (id: number) =>
 // Chatbot
 export const sendChatMessage = async (sessionId: string, message: string) => {
   const res = await fetch(
-    "https://othy123.app.n8n.cloud/webhook-test/it-support-chatbot",
+    "https://othy123.app.n8n.cloud/webhook/chatbot-support",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
